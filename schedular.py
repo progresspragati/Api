@@ -28,7 +28,7 @@ Balance : {balance}
         email_body
     )
 
-schedule.every().day.at("18:10").do(job)
+schedule.every().day.at("12:00").do(job)
 
 print("Scheduler started...")
 
