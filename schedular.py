@@ -1,34 +1,63 @@
 import schedule
 import time
-from token_client import call_api
+from token_client_esimfx import call_api as call_esimfx
+from token_client_zetexa import call_api as call_zetexa
 from email_sender import send_email
 
 def job():
-    response = call_api()
-    if response.status_code != 200:
-        send_email(
-            "API Error",
-            f"API failed with status {response.status_code}\n\n{response.text}"
-        )
-        return
-    data = response.json()
-    profile = data.get("data", {})
 
-    balance = profile.get("balance", "N/A")
+    email_body = "Reseller Balance Summary\n\n"
 
-    print(data["data"]["balance"]) 
+    # --------------------
+    # ESIMFX
+    # --------------------
+    try:
+        esimfx_response = call_esimfx()
 
-    email_body = f"""
-Reseller Profile Summary
-Provider    : "Esimfx"
-Balance : {balance}
-"""
-    send_email(
-        "Scheduled Reseller Profile",
-        email_body
-    )
+        if esimfx_response.status_code == 200:
+            data = esimfx_response.json()
+            balance = data.get("data", {}).get("balance", "N/A")
+            try:
+                balance_value = float(balance)
+                if balance_value < 10:
+                    balance = f"{balance_value}  ⚠️ LOW BALANCE"
+            except:
+                balance = "Invalid balance format"
+        else:
+            balance = f"API Error ({esimfx_response.status_code})"
 
-schedule.every().day.at("12:00").do(job)
+    except Exception as e:
+        balance = f"Error: {str(e)}"
+
+    email_body += f"Provider : Esimfx\nBalance  : {balance}\n\n"
+
+
+    # --------------------
+    # ZETEXA
+    # --------------------
+    try:
+        zetexa_response = call_zetexa()
+
+        if zetexa_response.status_code == 200:
+            data = zetexa_response.json()
+            balance = data.get("balance", "N/A")
+            try:
+                balance_value = float(balance)
+                if balance_value < 10:
+                    balance = f"{balance_value}  ⚠️ LOW BALANCE"
+            except:
+                balance = "Invalid balance format"
+        else:
+            balance = f"API Error ({zetexa_response.status_code})"
+
+    except Exception as e:
+        balance = f"Error: {str(e)}"
+
+    email_body += f"Provider : Zetexa\nBalance  : {balance}\n\n"
+
+
+    send_email("Daily Reseller Balance", email_body)
+schedule.every().day.at("10:45").do(job)
 
 print("Scheduler started...")
 

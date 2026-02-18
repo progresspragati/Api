@@ -23,6 +23,9 @@ def login_and_get_token():
     
     data = response.json()
     print("LOGIN RESPONSE:", data)
-    save_tokens({
+    save_tokens("esimfx",{
         "access_token": data["data"]["access_token"],
     })
+    
+if __name__ == "__main__":
+    login_and_get_token()
