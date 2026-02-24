@@ -3,6 +3,21 @@ import time
 from token_client_esimfx import call_api as call_esimfx
 from token_client_zetexa import call_api as call_zetexa
 from email_sender import send_email
+import requests
+
+def convert_inr_to_usd(amount):
+    try:
+        url = "https://api.exchangerate-api.com/v4/latest/INR"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+
+        rate = data["rates"]["USD"]
+        usd_value = float(amount) * rate
+
+        return round(usd_value, 2)
+
+    except Exception as e:
+        return None
 
 def job():
 
@@ -29,7 +44,7 @@ def job():
     except Exception as e:
         balance = f"Error: {str(e)}"
 
-    email_body += f"Provider : Esimfx\nBalance  : {balance}\n\n"
+    email_body += f"Provider : Esimfx\nBalance  : $ {balance}\n\n"
 
 
     # --------------------
@@ -43,6 +58,13 @@ def job():
             balance = data.get("balance", "N/A")
             try:
                 balance_value = float(balance)
+                usd_balance = convert_inr_to_usd(balance_value)
+
+                if usd_balance:
+                    # balance = f"₹{balance_value} (~ ${usd_balance})"
+                    balance = f"$ {usd_balance}"
+                else:
+                    balance = f"₹{balance_value}"
                 if balance_value < 10:
                     balance = f"{balance_value}  ⚠️ LOW BALANCE"
             except:
@@ -57,7 +79,7 @@ def job():
 
 
     send_email("Daily Reseller Balance", email_body)
-schedule.every().day.at("10:45").do(job)
+schedule.every().day.at("11:25").do(job)
 
 print("Scheduler started...")
 

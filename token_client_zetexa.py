@@ -32,7 +32,7 @@ def call_api():
         token_data = load_tokens("zetexa")
 
         headers["Authorization"] = f"Bearer {token_data['access_token']}"
-        response = requests.get(API_URL, headers=headers, timeout=10)
+        response = requests.post(API_URL, headers=headers, timeout=10)
 
     return response
 

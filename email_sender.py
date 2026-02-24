@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import requests
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -14,6 +15,7 @@ SENDER_PASSWORD = os.getenv("EMAIL_APP_PASSWORD")   # NOT normal password
 RECEIVER_EMAILS = ["progresspragatigupta@gmail.com",
                    "ravi@connectingit.in",
                    "vinod.gupta@consultit.co.in"]
+
 
 
 def send_email(subject, body):
