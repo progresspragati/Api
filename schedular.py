@@ -2,6 +2,7 @@ import schedule
 import time
 from token_client_esimfx import call_api as call_esimfx
 from token_client_zetexa import call_api as call_zetexa
+from airalo_order import get_airalo_data
 from email_sender import send_email
 import requests
 
@@ -21,7 +22,7 @@ def convert_inr_to_usd(amount):
 
 def job():
 
-    email_body = "Reseller Balance Summary\n\n"
+    email_body = "Reseller Balance Summary and Airalo Order Details\n\n"
 
     # --------------------
     # ESIMFX
@@ -77,9 +78,27 @@ def job():
 
     email_body += f"Provider : Zetexa\nBalance  : {balance}\n\n"
 
+    # --------------------
+    # AIRALO ORDERS
+    # --------------------
+    try:
+        airalo = get_airalo_data()
 
-    send_email("Daily Reseller Balance", email_body)
-schedule.every().day.at("11:25").do(job)
+        email_body += (
+            f"\nAiralo Orders\n"
+            f"Today ({airalo['today_date']}): {airalo['today_orders']}\n"
+            f"Yesterday ({airalo['yesterday_date']}): {airalo['yesterday_orders']}\n\n"
+        )
+
+        screenshot_path = airalo["screenshot"]
+
+    except Exception as e:
+        email_body += f"\nAiralo Error: {str(e)}\n"
+        screenshot_path = None
+
+
+    send_email("Daily Reseller Balance", email_body, screenshot_path)
+schedule.every().day.at("17:03").do(job)
 
 print("Scheduler started...")
 
